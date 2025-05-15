@@ -1,28 +1,34 @@
-import { useContext, useState } from "react";
+// src/components/Cards.jsx
+import { useState } from "react";
 import { FaHeart } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AuthContext } from "../contexts/AuthProvider";
 import Swal from "sweetalert2";
-import useCart from "../hooks/useCart";
-import axios from "axios";
+import {
+  useAddToCartMutation,
+  useGetCartByEmailQuery,
+} from "../slices/cartApiSlice";
+import { useSelector } from "react-redux";
 
 const Cards = ({ item }) => {
-  const { name, image, price, recipe, _id } = item;
-
-  const { user } = useContext(AuthContext);
-  const [cart, refetch] = useCart();
+  const { name, image, price, _id } = item;
+  const user = useSelector((state) => state.auth.userInfo);
   const navigate = useNavigate();
   const location = useLocation();
-  // console.log(item)
+
   const [isHeartFilled, setIsHeartFilled] = useState(false);
+
+  const [createCartItem] = useAddToCartMutation();
+
+  // Fetch the user's cart to trigger refetch after adding
+  const { refetch } = useGetCartByEmailQuery(user?.email, {
+    skip: !user?.email,
+  });
 
   const handleHeartClick = () => {
     setIsHeartFilled(!isHeartFilled);
   };
 
-  // add to cart handler
-  const handleAddToCart = (item) => {
-    // console.log(item);
+  const handleAddToCart = async () => {
     if (user && user.email) {
       const cartItem = {
         menuItemId: _id,
@@ -33,32 +39,26 @@ const Cards = ({ item }) => {
         email: user.email,
       };
 
-      axios
-        .post("http://localhost:6001/carts", cartItem)
-        .then((response) => {
-          console.log(response);
-          if (response) {
-            refetch(); // refetch cart
-            Swal.fire({
-              position: "center",
-              icon: "success",
-              title: "Food added on the cart.",
-              showConfirmButton: false,
-              timer: 1500,
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error.response.data.message);
-          const errorMessage = error.response.data.message;
-          Swal.fire({
-            position: "center",
-            icon: "warning",
-            title: `${errorMessage}`,
-            showConfirmButton: false,
-            timer: 1500,
-          });
+      try {
+        await createCartItem(cartItem).unwrap();
+        refetch(); // refresh cart
+        Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Food added to cart.",
+          showConfirmButton: false,
+          timer: 1500,
         });
+      } catch (error) {
+        const message = error?.data?.message || "Failed to add to cart.";
+        Swal.fire({
+          position: "center",
+          icon: "warning",
+          title: message,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
     } else {
       Swal.fire({
         title: "Please login to order the food",
@@ -76,12 +76,12 @@ const Cards = ({ item }) => {
   };
 
   return (
-    <div
-      to={`/menu/${item._id}`}
-      className="card relative mr-5 shadow-xl md:my-5"
-    >
+    <div className="card relative mr-5 shadow-xl md:my-5">
       <div
-        className={`rating heartStar bg-green absolute right-2 top-2 gap-1 p-4 ${
+        // className={`heartStar rating absolute right-2 top-2 gap-1 bg-green p-4 ${
+        //   isHeartFilled ? "text-rose-500" : "text-white"
+        // }`}
+        className={`btn btn-circle absolute right-2 top-2 bg-green transition-colors duration-300 ${
           isHeartFilled ? "text-rose-500" : "text-white"
         }`}
         onClick={handleHeartClick}
@@ -91,26 +91,23 @@ const Cards = ({ item }) => {
       <Link to={`/menu/${item._id}`}>
         <figure>
           <img
-            src={item.image}
-            alt="Shoes"
+            src={image}
+            alt={name}
             className="transition-all duration-300 hover:scale-105 md:h-72"
           />
         </figure>
       </Link>
       <div className="card-body">
         <Link to={`/menu/${item._id}`}>
-          <h2 className="card-title">{item.name}!</h2>
+          <h2 className="card-title">{name}</h2>
         </Link>
         <p>Description of the item</p>
         <div className="card-actions mt-2 items-center justify-between">
           <h5 className="font-semibold">
-            <span className="text-red text-sm">$ </span> {item.price}
+            <span className="text-sm text-red">$</span> {price}
           </h5>
-          <button
-            onClick={() => handleAddToCart(item)}
-            className="btn bg-green text-white"
-          >
-            Add to Cart{" "}
+          <button onClick={handleAddToCart} className="btn bg-green text-white">
+            Add to Cart
           </button>
         </div>
       </div>

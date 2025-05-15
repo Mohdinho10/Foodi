@@ -1,8 +1,8 @@
-import Banner from "../../components/Banner";
-import Categories from "../../components/Categories";
-import SpecialDishes from "../../components/SpecialDishes";
-import Testimonials from "../../components/Testimonials";
-import OurServices from "../../components/OurServices";
+import Banner from "../components/Banner";
+import Categories from "../components/Categories";
+import SpecialDishes from "../components/SpecialDishes";
+import Testimonials from "../components/Testimonials";
+import OurServices from "../components/OurServices";
 
 const Home = () => {
   return (

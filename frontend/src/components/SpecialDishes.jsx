@@ -1,18 +1,17 @@
-/* eslint-disable react/prop-types */
-import React, { useEffect, useState } from "react";
+import { useRef } from "react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
-import { FaHeart } from "react-icons/fa";
-import Cards from "../../components/Cards";
 import { FaAngleRight, FaAngleLeft } from "react-icons/fa6";
+import Cards from "./Cards";
+import { useGetPopularDishesQuery } from "../slices/menuApiSlice";
 
 const SampleNextArrow = (props) => {
   const { className, style, onClick } = props;
   return (
     <div
       className={className}
-      style={{ ...style, display: "block", background: "red" }}
+      style={{ ...style, display: "block" }}
       onClick={onClick}
     >
       NEXT
@@ -25,7 +24,7 @@ const SamplePrevArrow = (props) => {
   return (
     <div
       className={className}
-      style={{ ...style, display: "block", background: "green" }}
+      style={{ ...style, display: "block" }}
       onClick={onClick}
     >
       BACK
@@ -34,18 +33,9 @@ const SamplePrevArrow = (props) => {
 };
 
 const SpecialDishes = () => {
-  const [recipes, setRecipes] = useState([]);
-  const slider = React.useRef(null);
+  const slider = useRef(null);
+  const { data: recipes = [], isLoading, isError } = useGetPopularDishesQuery();
 
-  useEffect(() => {
-    fetch("/menu.json")
-      .then((res) => res.json())
-      .then((data) => {
-        const specials = data.filter((item) => item.category === "popular");
-        // console.log(specials)
-        setRecipes(specials);
-      });
-  }, []);
   const settings = {
     dots: true,
     infinite: false,
@@ -54,65 +44,51 @@ const SpecialDishes = () => {
     slidesToScroll: 3,
     initialSlide: 1,
     responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 3,
-          infinite: true,
-          dots: true,
-        },
-      },
-      {
-        breakpoint: 970,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 2,
-          initialSlide: 2,
-        },
-      },
-      {
-        breakpoint: 576,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        },
-      },
+      { breakpoint: 1024, settings: { slidesToShow: 3, slidesToScroll: 3 } },
+      { breakpoint: 970, settings: { slidesToShow: 2, slidesToScroll: 2 } },
+      { breakpoint: 576, settings: { slidesToShow: 1, slidesToScroll: 1 } },
     ],
-
     nextArrow: <SampleNextArrow />,
     prevArrow: <SamplePrevArrow />,
   };
+
   return (
     <div className="container relative mx-auto my-20 max-w-screen-2xl px-4 xl:px-24">
       <div className="text-left">
         <p className="subtitle">Customer Favorites</p>
-        <h2 className="title">Popular Catagories</h2>
+        <h2 className="title">Popular Categories</h2>
       </div>
+
       <div className="right-3 top-8 mb-10 md:absolute md:mr-24">
         <button
-          onClick={() => slider?.current?.slickPrev()}
-          className="btn ml-5 rounded-full p-2"
+          onClick={() => slider.current?.slickPrev()}
+          className="btn ml-5 rounded-full bg-green p-2"
         >
           <FaAngleLeft className="h-8 w-8 p-1" />
         </button>
         <button
-          className="bg-green btn ml-5 rounded-full p-2"
-          onClick={() => slider?.current?.slickNext()}
+          onClick={() => slider.current?.slickNext()}
+          className="btn ml-5 rounded-full bg-green p-2"
         >
           <FaAngleRight className="h-8 w-8 p-1" />
         </button>
       </div>
 
-      <Slider
-        ref={slider}
-        {...settings}
-        className="mt-10 space-x-5 overflow-hidden"
-      >
-        {recipes.map((item, i) => (
-          <Cards item={item} key={i} />
-        ))}
-      </Slider>
+      {isLoading ? (
+        <p>Loading popular dishes...</p>
+      ) : isError ? (
+        <p>Failed to load dishes.</p>
+      ) : (
+        <Slider
+          ref={slider}
+          {...settings}
+          className="mt-10 space-x-5 overflow-hidden"
+        >
+          {recipes.map((item, i) => (
+            <Cards item={item} key={i} />
+          ))}
+        </Slider>
+      )}
     </div>
   );
 };

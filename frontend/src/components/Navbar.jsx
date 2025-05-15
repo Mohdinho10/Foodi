@@ -1,32 +1,29 @@
-import { useContext, useEffect, useState } from "react";
+// src/components/Navbar.jsx
+import { useEffect, useState } from "react";
 import logo from "/logo.png";
 import { FaRegUser } from "react-icons/fa";
 import Modal from "./Modal";
 import Profile from "./Profile";
 import { Link } from "react-router-dom";
-import useCart from "../hooks/useCart";
-import useAuth from "../hooks/useAuth";
+import { useGetCartByEmailQuery } from "../slices/cartApiSlice";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
   const [isSticky, setSticky] = useState(false);
-  const { user, loading } = useAuth();
-  const [cart, refetch] = useCart();
+  const user = useSelector((state) => state.auth.userInfo);
+
+  // Get cart items via RTK Query
+  const { data: cartItems = [] } = useGetCartByEmailQuery(user?.email, {
+    skip: !user?.email,
+  });
 
   useEffect(() => {
     const handleScroll = () => {
-      const offset = window.scrollY;
-      if (offset > 0) {
-        setSticky(true);
-      } else {
-        setSticky(false);
-      }
+      setSticky(window.scrollY > 0);
     };
 
     window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navItems = (
@@ -73,15 +70,12 @@ const Navbar = () => {
       </li>
     </>
   );
+
   return (
-    <header
-      className={`container fixed left-0 right-0 top-0 mx-auto max-w-screen-2xl transition-all duration-300 ease-in-out`}
-    >
+    <header className="container fixed left-0 right-0 top-0 mx-auto max-w-screen-2xl transition-all duration-300 ease-in-out">
       <div
         className={`navbar xl:px-24 ${
-          isSticky
-            ? "bg-base-100 shadow-md transition-all duration-300 ease-in-out"
-            : ""
+          isSticky ? "bg-base-100 shadow-md transition-all duration-300" : ""
         }`}
       >
         <div className="navbar-start">
@@ -104,18 +98,20 @@ const Navbar = () => {
             </label>
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-64 space-y-3 p-2 shadow"
+              className="dropdown-content menu menu-sm z-[1] mt-3 w-64 space-y-3 rounded-box bg-base-100 p-2 shadow"
             >
               {navItems}
             </ul>
           </div>
           <a href="/">
-            <img src={logo} alt="" />
+            <img src={logo} alt="logo" />
           </a>
         </div>
+
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">{navItems}</ul>
         </div>
+
         <div className="navbar-end">
           <button className="btn btn-ghost btn-circle hidden lg:flex">
             <svg
@@ -135,7 +131,7 @@ const Navbar = () => {
           </button>
 
           {/* shopping cart */}
-          <Link to="/cart-page">
+          <Link to="/cart">
             <label
               tabIndex={0}
               className="btn btn-ghost btn-circle mr-3 items-center justify-center lg:flex"
@@ -156,22 +152,18 @@ const Navbar = () => {
                   />
                 </svg>
                 <span className="badge badge-sm indicator-item">
-                  {cart.length || 0}
+                  {cartItems.length || 0}
                 </span>
               </div>
             </label>
           </Link>
 
-          {/* login button */}
-
           {user ? (
-            <>
-              <Profile user={user} />
-            </>
+            <Profile user={user} />
           ) : (
             <button
               onClick={() => document.getElementById("my_modal_5").showModal()}
-              className="btn bg-green flex items-center gap-2 rounded-full px-6 text-white"
+              className="btn flex items-center gap-2 rounded-full bg-green px-6 text-white"
             >
               <FaRegUser /> Login
             </button>

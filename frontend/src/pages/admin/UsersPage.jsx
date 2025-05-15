@@ -1,30 +1,44 @@
-import { useQuery } from "@tanstack/react-query";
-import { FaTrashAlt, FaUser, FaUsers } from "react-icons/fa";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { FaTrashAlt, FaUsers } from "react-icons/fa";
+import {
+  useMakeAdminMutation,
+  useDeleteUserMutation,
+  useGetAllUsersQuery,
+} from "../../slices/userApiSlice";
 
 const Users = () => {
-  const axiosSecure = useAxiosSecure();
-  const { refetch, data: users = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const res = await axiosSecure.get("/users");
-      return res.data;
-    },
-  });
-  // console.log(users);
-  const handleMakeAdmin = (user) => {
-    axiosSecure.patch(`/users/admin/${user._id}`).then((res) => {
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAllUsersQuery();
+
+  const [makeAdmin] = useMakeAdminMutation();
+  const [deleteUser] = useDeleteUserMutation();
+
+  const handleMakeAdmin = async (user) => {
+    try {
+      await makeAdmin(user._id).unwrap();
       alert(`${user.name} is now admin`);
       refetch();
-    });
+    } catch (err) {
+      console.error("Failed to make admin:", err);
+    }
   };
 
-  const handleDeleteUser = (user) => {
-    axiosSecure.delete(`/users/${user._id}`).then((res) => {
+  const handleDeleteUser = async (user) => {
+    try {
+      await deleteUser(user._id).unwrap();
       alert(`${user.name} is removed from database`);
       refetch();
-    });
+    } catch (err) {
+      console.error("Failed to delete user:", err);
+    }
   };
+
+  if (isLoading) return <div>Loading users...</div>;
+  if (isError) return <div>Error fetching users.</div>;
+
   return (
     <div>
       <div className="m-4 flex items-center justify-between">
@@ -32,11 +46,9 @@ const Users = () => {
         <h5>Total Users: {users.length}</h5>
       </div>
 
-      {/* table */}
       <div>
         <div className="overflow-x-auto">
           <table className="table-zebra table md:w-[870px]">
-            {/* head */}
             <thead className="bg-green rounded-lg text-white">
               <tr>
                 <th>#</th>
@@ -48,7 +60,7 @@ const Users = () => {
             </thead>
             <tbody>
               {users.map((user, index) => (
-                <tr key={index}>
+                <tr key={user._id}>
                   <th>{index + 1}</th>
                   <td>{user.name}</td>
                   <td>{user.email}</td>

@@ -4,24 +4,28 @@ import {
   deleteMenuItem,
   getAllMenuItems,
   getMenuItem,
+  getPopularDishes,
   updateMenuItem,
 } from "../controllers/menuController.js";
 
 const router = Router();
 
-// get all menu items
+// GET all menu items
 router.get("/", getAllMenuItems);
 
-// post a menu item
+// GET popular items (specific route first to avoid :id conflict)
+router.get("/popular", getPopularDishes);
+
+// POST a new menu item
 router.post("/", createMenuItem);
 
-// delete a menu item
+// DELETE a menu item by ID
 router.delete("/:id", deleteMenuItem);
 
-// get single menu item
+// GET a single menu item by ID
 router.get("/:id", getMenuItem);
 
-// update single menu item
+// PATCH (update) a menu item by ID
 router.patch("/:id", updateMenuItem);
 
 export default router;
