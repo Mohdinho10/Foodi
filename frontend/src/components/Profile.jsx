@@ -1,21 +1,26 @@
-import { useContext, useState } from "react";
-import { AuthContext } from "../contexts/AuthProvider";
 import avatarImg from "/images/avatar.jpg";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getAuth, signOut } from "firebase/auth";
+import { logout } from "../slices/authSlice";
+import app from "../firebase/firebase.config";
 
-const Profile = ({ user }) => {
-  const { logOut } = useContext(AuthContext);
+const auth = getAuth(app);
+
+const Profile = () => {
+  const user = useSelector((state) => state.auth.userInfo);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // logout
   const handleLogout = () => {
-    logOut()
+    signOut(auth)
       .then(() => {
-        // Sign-out successful.
+        dispatch(logout());
+        localStorage.removeItem("access-token");
         navigate("/");
       })
       .catch((error) => {
-        console.log(error);
+        console.log("Logout error:", error);
       });
   };
 
@@ -24,42 +29,42 @@ const Profile = ({ user }) => {
       <div className="drawer drawer-end z-50">
         <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content">
-          {/* Page content here */}
+          {/* Profile button with avatar */}
           <label
             htmlFor="my-drawer-4"
-            className="drawer-button btn btn-ghost btn-circle avatar"
+            className="drawer-button avatar btn btn-ghost btn-circle"
           >
             <div className="w-10 rounded-full">
-              {user.photoURL ? (
-                <img alt="" src={user.photoURL} />
+              {user?.photoURL ? (
+                <img alt="User Avatar" src={user.photoURL} />
               ) : (
-                <img alt="" src={avatarImg} />
+                <img alt="Default Avatar" src={avatarImg} />
               )}
             </div>
           </label>
         </div>
+
         <div className="drawer-side">
           <label
             htmlFor="my-drawer-4"
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-            {/* Sidebar content here */}
+          <ul className="menu min-h-full w-80 bg-base-200 p-4 text-base-content">
             <li>
-              <a href="/update-profile">Profile</a>
+              <Link to="/update-profile">Profile</Link>
             </li>
             <li>
-              <a href="/order">Order</a>
+              <Link to="/orders">Order</Link>
             </li>
             <li>
-              <a>Settings</a>
+              <Link to="/settings">Settings</Link>
             </li>
             <li>
               <Link to="/dashboard">Dashboard</Link>
             </li>
             <li>
-              <a onClick={handleLogout}>Logout</a>
+              <button onClick={handleLogout}>Logout</button>
             </li>
           </ul>
         </div>

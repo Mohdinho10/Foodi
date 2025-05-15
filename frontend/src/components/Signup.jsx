@@ -1,21 +1,25 @@
-import { useContext } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaFacebookF, FaGithub, FaGoogle, FaRegUser } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { FaFacebookF, FaGithub, FaGoogle } from "react-icons/fa";
 import { useForm } from "react-hook-form";
-import Modal from "./Modal";
-import { AuthContext } from "../contexts/AuthProvider";
-import axios from "axios";
-import useAxiosPublic from "../hooks/useAxiosPublic";
+import { useCreateUserMutation } from "../slices/userApiSlice";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  updateProfile,
+} from "firebase/auth";
+import app from "../firebase/firebase.config";
+import { toast } from "react-hot-toast";
+
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 const Signup = () => {
-  const { signUpWithGmail, createUser, updateUserProfile } =
-    useContext(AuthContext);
-  const axiosPublic = useAxiosPublic();
-
+  const [createUserOnDB] = useCreateUserMutation();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = location.state?.from?.pathname || "/";
+  // const location = useLocation();
+  // const from = location.state?.from?.pathname || "/";
 
   const {
     register,
@@ -23,69 +27,66 @@ const Signup = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    const email = data.email;
-    const password = data.password;
-    // console.log(email, password)
-    createUser(email, password)
-      .then((result) => {
-        // Signed up
-        const user = result.user;
-        updateUserProfile(data.email, data.photoURL).then(() => {
-          const userInfor = {
-            name: data.name,
-            email: data.email,
-          };
-          axiosPublic.post("/users", userInfor).then((response) => {
-            // console.log(response);
-            alert("Signin successful!");
-            navigate(from, { replace: true });
-          });
-        });
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // ..
-      });
+  const onSubmit = async (data) => {
+    const { name, email, password } = data;
+
+    try {
+      // Firebase signup
+      await createUserWithEmailAndPassword(auth, email, password);
+
+      // Update Firebase display name
+      await updateProfile(auth.currentUser, { displayName: name });
+
+      // Store user in DB via RTK
+      await createUserOnDB({ name, email });
+
+      toast.success("Signup successful! Redirecting...");
+      setTimeout(() => navigate("/", { replace: true }), 1000);
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast.error(error.message || "Signup failed.");
+    }
   };
 
-  // login with google
-  const handleRegister = () => {
-    signUpWithGmail()
-      .then((result) => {
-        const user = result.user;
-        const userInfor = {
-          name: result?.user?.displayName,
-          email: result?.user?.email,
-        };
-        axiosPublic.post("/users", userInfor).then((response) => {
-          // console.log(response);
-          alert("Signin successful!");
-          navigate("/");
-        });
-      })
-      .catch((error) => console.log(error));
+  const handleGoogleSignup = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const { displayName, email } = result.user;
+
+      // Store user in DB via RTK
+      await createUserOnDB({ name: displayName, email });
+
+      toast.success("Google signup successful! Redirecting...");
+      setTimeout(() => navigate("/", { replace: true }), 1000);
+    } catch (error) {
+      console.error("Google signup error:", error);
+      toast.error(error.message || "Google signup failed.");
+    }
   };
+
   return (
-    <div className="mx-auto my-20 flex w-full max-w-md items-center justify-center bg-white shadow">
+    <div className="mx-auto my-24 flex w-full max-w-md items-center justify-center bg-white shadow">
       <div className="mb-5">
         <form className="card-body" onSubmit={handleSubmit(onSubmit)}>
           <h3 className="text-lg font-bold">Please Create An Account!</h3>
-          {/* name */}
+
+          {/* Name */}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Name</span>
             </label>
             <input
-              type="name"
+              type="text"
               placeholder="Your name"
-              className="input input-bordered"
-              {...register("name")}
+              className="input-bordered input focus:outline-none"
+              {...register("name", { required: true })}
             />
+            {errors.name && (
+              <p className="text-red-500 text-sm">Name is required</p>
+            )}
           </div>
 
-          {/* email */}
+          {/* Email */}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Email</span>
@@ -93,12 +94,15 @@ const Signup = () => {
             <input
               type="email"
               placeholder="email"
-              className="input input-bordered"
-              {...register("email")}
+              className="input-bordered input focus:outline-none"
+              {...register("email", { required: true })}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm">Email is required</p>
+            )}
           </div>
 
-          {/* password */}
+          {/* Password */}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Password</span>
@@ -106,20 +110,14 @@ const Signup = () => {
             <input
               type="password"
               placeholder="password"
-              className="input input-bordered"
-              {...register("password")}
+              className="input-bordered input focus:outline-none"
+              {...register("password", { required: true })}
             />
-            <label className="label">
-              <a href="#" className="label-text-alt link link-hover mt-2">
-                Forgot password?
-              </a>
-            </label>
+            {errors.password && (
+              <p className="text-red-500 text-sm">Password is required</p>
+            )}
           </div>
 
-          {/* error message */}
-          <p>{errors.message}</p>
-
-          {/* submit btn */}
           <div className="form-control mt-6">
             <input
               type="submit"
@@ -135,9 +133,10 @@ const Signup = () => {
             </Link>
           </div>
         </form>
+
         <div className="space-x-3 text-center">
           <button
-            onClick={handleRegister}
+            onClick={handleGoogleSignup}
             className="btn btn-circle hover:bg-green hover:text-white"
           >
             <FaGoogle />

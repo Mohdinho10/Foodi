@@ -1,30 +1,53 @@
-import { AuthContext } from "../../contexts/AuthProvider";
+import { getAuth, updateProfile } from "firebase/auth";
 import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
+import { setCredentials } from "../slices/authSlice";
 
 const UserProfile = () => {
-  const { updateUserProfile } = useContext(AuthContext);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const onSubmit = (data) => {
-    const name = data.name;
-    const photoURL = data.photoURL;
+  const dispatch = useDispatch();
+  const auth = getAuth();
+  const user = useSelector((state) => state.auth.userInfo); // From Redux
 
-    updateUserProfile(name, photoURL)
-      .then(() => {
-        // Profile updated!
-        alert("Profile updated successfully");
-      })
-      .catch((error) => {
-        // An error occurred
-        // ...
+  const onSubmit = async (data) => {
+    const name = data.name;
+
+    const file = data.photoURL?.[0];
+    let photoURL = auth.currentUser.photoURL;
+
+    if (file) {
+      // TODO: Replace this with actual image upload logic (e.g., Firebase Storage)
+      photoURL = URL.createObjectURL(file); // Only for preview/demo purposes
+    }
+
+    try {
+      await updateProfile(auth.currentUser, {
+        displayName: name,
+        photoURL,
       });
+
+      const updatedUser = {
+        displayName: name,
+        email: auth.currentUser.email,
+        uid: auth.currentUser.uid,
+        photoURL,
+      };
+
+      dispatch(setCredentials(updatedUser));
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Profile update failed:", error);
+      alert("Failed to update profile.");
+    }
   };
+
   return (
     <div className="mx-auto flex h-screen max-w-md items-center justify-center">
-      <div className="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
+      <div className="card bg-base-100 w-full max-w-sm shadow-2xl">
         <form className="card-body" onSubmit={handleSubmit(onSubmit)}>
           <div className="form-control">
             <label className="label">
@@ -32,12 +55,16 @@ const UserProfile = () => {
             </label>
             <input
               type="text"
-              {...register("name")}
+              defaultValue={user?.displayName || ""}
+              {...register("name", { required: true })}
               placeholder="Your name"
               className="input input-bordered"
-              required
             />
+            {errors.name && (
+              <p className="text-sm text-red-500">Name is required</p>
+            )}
           </div>
+
           <div className="form-control">
             <label className="label">
               <span className="label-text">Upload Photo</span>
@@ -47,12 +74,12 @@ const UserProfile = () => {
               {...register("photoURL")}
               className="file-input mt-1 w-full"
             />
-            {/* <input type="text" {...register("photoURL")} placeholder="photo url" className="input input-bordered" required /> */}
           </div>
+
           <div className="form-control mt-6">
             <input
               type="submit"
-              value={"Update"}
+              value="Update"
               className="btn bg-green text-white"
             />
           </div>

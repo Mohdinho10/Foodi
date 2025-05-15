@@ -1,91 +1,50 @@
-import { createContext } from "react";
-import {
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-  updateProfile,
-} from "firebase/auth";
-import { useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { useDispatch } from "react-redux";
 import { useEffect } from "react";
+import { getAuth } from "firebase/auth";
 import app from "../firebase/firebase.config";
+import { setCredentials, logout } from "../slices/authSlice";
 import axios from "axios";
 
-export const AuthContext = createContext();
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const createUser = (email, password) => {
-    setLoading(true);
-    return createUserWithEmailAndPassword(auth, email, password);
-  };
-
-  const signUpWithGmail = () => {
-    setLoading(true);
-    return signInWithPopup(auth, googleProvider);
-  };
-
-  const login = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
-  };
-
-  const logOut = () => {
-    localStorage.removeItem("genius-token");
-    return signOut(auth);
-  };
-
-  // update your profile
-  const updateUserProfile = (name, photoURL) => {
-    return updateProfile(auth.currentUser, {
-      displayName: name,
-      photoURL: photoURL,
-    });
-  };
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      // console.log(currentUser);
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        const userInfo = { email: currentUser.email };
-        axios.post("http://localhost:6001/jwt", userInfo).then((response) => {
-          // console.log(response.data.token);
-          if (response.data.token) {
-            localStorage.setItem("access-token", response.data.token);
+        const userInfo = {
+          displayName: currentUser.displayName,
+          email: currentUser.email,
+          uid: currentUser.uid,
+        };
+
+        // Optional: Get JWT token from your backend
+        try {
+          const res = await axios.post("http://localhost:3000/jwt", {
+            email: currentUser.email,
+          });
+
+          if (res.data.token) {
+            localStorage.setItem("access-token", res.data.token);
           }
-        });
+        } catch (err) {
+          console.error("Error fetching token:", err);
+        }
+
+        // Update Redux
+        dispatch(setCredentials(userInfo));
       } else {
+        dispatch(logout());
         localStorage.removeItem("access-token");
       }
-
-      setLoading(false);
     });
 
-    return () => {
-      return unsubscribe();
-    };
-  }, []);
+    return () => unsubscribe();
+  }, [dispatch]);
 
-  const authInfo = {
-    user,
-    loading,
-    createUser,
-    login,
-    logOut,
-    signUpWithGmail,
-    updateUserProfile,
-  };
-
-  return (
-    <AuthContext.Provider value={authInfo}>{children}</AuthContext.Provider>
-  );
+  return children;
 };
 
 export default AuthProvider;

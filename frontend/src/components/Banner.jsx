@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import bannerImg from "/images/home/banner.png";
 
 const Banner = () => {
@@ -108,9 +109,12 @@ const Banner = () => {
             Where Each Plate Weaves a Story of Culinary Mastery and Passionate
             Craftsmanship
           </p>
-          <button className="bg-green btn rounded-full px-8 py-3 font-semibold text-white">
+          <Link
+            to={"/menu"}
+            className="btn rounded-full bg-green px-8 py-3 font-semibold text-white"
+          >
             Order Now
-          </button>
+          </Link>
         </div>
       </div>
     </div>

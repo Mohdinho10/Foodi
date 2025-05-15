@@ -53,3 +53,9 @@ export const updateMenuItem = asyncHandler(async (req, res) => {
 
   res.status(200).json(updatedMenu);
 });
+
+export const getPopularDishes = asyncHandler(async (req, res) => {
+  const popularItems = await Menu.find({ category: "popular" });
+
+  res.json(popularItems);
+});

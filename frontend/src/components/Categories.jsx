@@ -2,25 +2,25 @@ const categoryItems = [
   {
     id: 1,
     title: "Main Dish",
-    despriction: "(86 dishes)",
+    description: "(86 dishes)",
     image: "/images/home/category/img1.png",
   },
   {
     id: 2,
     title: "Break Fast",
-    despriction: "(12 break fast)",
+    description: "(12 break fast)",
     image: "/images/home/category/img2.png",
   },
   {
     id: 3,
     title: "Dessert",
-    despriction: "(48 dessert)",
+    description: "(48 dessert)",
     image: "/images/home/category/img3.png",
   },
   {
     id: 4,
     title: "Browse All",
-    despriction: "(255 Items)",
+    description: "(255 Items)",
     image: "/images/home/category/img4.png",
   },
 ];
@@ -30,7 +30,7 @@ const Categories = () => {
     <div className="container mx-auto max-w-screen-2xl px-4 py-16 xl:px-24">
       <div className="text-center">
         <p className="subtitle">Customer Favorites</p>
-        <h2 className="title">Popular Catagories</h2>
+        <h2 className="title">Popular Categories</h2>
       </div>
 
       {/* category cards */}
@@ -49,7 +49,7 @@ const Categories = () => {
             </div>
             <div className="mt-5 space-y-1">
               <h5 className="font-semibold text-[#1E1E1E]">{item.title}</h5>
-              <p className="text-secondary text-sm">{item.despriction}</p>
+              <p className="text-sm text-secondary">{item.description}</p>
             </div>
           </div>
         ))}
