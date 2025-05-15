@@ -2,8 +2,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoutes from "./components/ProtectedRoutes";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
 import DashboardLayout from "./components/DashBoardLayout";
 import HomePage from "./pages/HomePage";
 import MenuPage from "./pages/MenuPage";
@@ -29,9 +27,6 @@ function App() {
             <Route path="menu" element={<MenuPage />} />
             <Route path="menu/:id" element={<MenuItemPage />} />
             <Route path="cart" element={<CartPage />} />
-            {/* Auth routes */}
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
 
             {/* Protected routes */}
             <Route element={<ProtectedRoutes />}>
