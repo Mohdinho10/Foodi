@@ -1,5 +1,5 @@
-import { Link, Outlet } from "react-router-dom";
-import { MdDashboard, MdDashboardCustomize } from "react-icons/md";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { MdDashboard, MdDashboardCustomize, MdClose } from "react-icons/md";
 import {
   FaEdit,
   FaLocationArrow,
@@ -10,39 +10,18 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useGetAdminStatusQuery } from "../slices/userApiSlice";
-
+import { getAuth, signOut } from "firebase/auth";
+import { logout } from "../slices/authSlice";
 import logo from "/logo.png";
-import Login from "./Login";
-
-const sharedLinks = (
-  <>
-    <li className="mt-3">
-      <Link to="/">
-        <MdDashboard /> Home
-      </Link>
-    </li>
-    <li>
-      <Link to="/menu">
-        <FaCartShopping /> Menu
-      </Link>
-    </li>
-    <li>
-      <Link to="/menu">
-        <FaLocationArrow /> Orders Tracking
-      </Link>
-    </li>
-    <li>
-      <Link to="/menu">
-        <FaQuestionCircle /> Customer Support
-      </Link>
-    </li>
-  </>
-);
+import { useState } from "react";
 
 const DashboardLayout = () => {
   const { userInfo } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const {
     data: adminData,
@@ -52,99 +31,200 @@ const DashboardLayout = () => {
     skip: !userInfo?.email,
   });
 
+  const handleLogout = () => {
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        dispatch(logout());
+        navigate("/");
+      })
+      .catch((err) => console.error(err));
+  };
+
   if (!userInfo) {
-    return <Login />;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-lg font-semibold">Please log in.</p>
+      </div>
+    );
   }
 
   if (isAdminLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-xl font-semibold text-gray-700">
-          Checking admin status...
+        <p className="text-lg font-semibold text-gray-700">
+          Checking admin access...
         </p>
       </div>
     );
   }
 
-  if (isAdminError || !adminData?.isAdmin) {
+  if (isAdminError || !adminData?.admin) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Link to="/">
-          <button className="btn bg-green text-white">Back to Home</button>
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl text-red-500">Access Denied: Admins only</p>
+        <Link to="/" className="bg-green btn text-white">
+          Back to Home
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="drawer sm:drawer-open">
-      <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content my-2 flex flex-col sm:items-start sm:justify-start">
-        {/* Top bar */}
-        <div className="mx-4 flex items-center justify-between">
-          <label
-            htmlFor="my-drawer-2"
-            className="btn btn-primary drawer-button lg:hidden"
+    <div className="relative flex h-screen overflow-hidden">
+      {/* Sidebar (mobile + desktop) */}
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-full w-72 flex-col justify-between border-r border-gray-200 bg-base-200 p-4 transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-[100%]"
+        } sm:static sm:translate-x-0`}
+      >
+        <div>
+          {/* Close button for mobile */}
+          <div className="mb-4 flex justify-end sm:hidden">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-gray-700 focus:outline-none"
+            >
+              <MdClose className="text-3xl" />
+            </button>
+          </div>
+
+          {/* Logo */}
+          <Link to="/dashboard" className="mb-6 flex items-center gap-2">
+            <img src={logo} alt="Logo" className="w-16" />
+            <span className="text-lg font-semibold">Admin Panel</span>
+          </Link>
+
+          {/* Navigation links */}
+          <ul className="space-y-3">
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/dashboard"
+                className="flex items-center gap-2"
+              >
+                <MdDashboard /> Dashboard
+              </Link>
+            </li>
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/dashboard"
+                className="flex items-center gap-2"
+              >
+                <FaShoppingBag /> Manage Bookings
+              </Link>
+            </li>
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/dashboard/add-menu"
+                className="flex items-center gap-2"
+              >
+                <FaPlusCircle /> Add Menu
+              </Link>
+            </li>
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/dashboard/manage-items"
+                className="flex items-center gap-2"
+              >
+                <FaEdit /> Manage Items
+              </Link>
+            </li>
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/dashboard/users"
+                className="flex items-center gap-2"
+              >
+                <FaUser /> All Users
+              </Link>
+            </li>
+
+            <hr />
+
+            <li>
+              <Link
+                to="/"
+                onClick={() => setSidebarOpen(false)}
+                className="flex items-center gap-2"
+              >
+                <MdDashboard /> Home
+              </Link>
+            </li>
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/menu"
+                className="flex items-center gap-2"
+              >
+                <FaCartShopping /> Menu
+              </Link>
+            </li>
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/orders"
+                className="flex items-center gap-2"
+              >
+                <FaLocationArrow /> Orders Tracking
+              </Link>
+            </li>
+            <li>
+              <Link
+                onClick={() => setSidebarOpen(false)}
+                to="/support"
+                className="flex items-center gap-2"
+              >
+                <FaQuestionCircle /> Customer Support
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        {/* ✅ Logout pinned to bottom (desktop) */}
+        <div className="mt-6 hidden sm:block">
+          <button
+            onClick={handleLogout}
+            className="btn w-full justify-start gap-2 bg-myGreen text-white"
           >
-            <MdDashboardCustomize />
-          </label>
-          <button className="btn bg-green flex items-center gap-2 rounded-full px-6 text-white sm:hidden">
             <FaRegUser /> Logout
           </button>
         </div>
+      </aside>
+
+      {/* Backdrop for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-40 sm:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main content */}
+      <div className="z-10 flex flex-1 flex-col overflow-y-auto">
+        {/* Top bar (mobile) */}
+        <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:hidden">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="btn btn-sm bg-myGreen text-white"
+          >
+            <MdDashboardCustomize className="text-lg" />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="btn btn-sm flex items-center gap-2 bg-myGreen text-white"
+          >
+            <FaRegUser /> Logout
+          </button>
+        </header>
 
         {/* Page content */}
-        <div className="mx-4 mt-5 md:mt-2">
+        <main className="flex-1 p-4">
           <Outlet />
-        </div>
-      </div>
-
-      {/* Sidebar */}
-      <div className="drawer-side">
-        <label
-          htmlFor="my-drawer-2"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
-        <ul className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-          <li>
-            <Link
-              to="/dashboard"
-              className="mb-3 flex items-center justify-start gap-2"
-            >
-              <img src={logo} alt="Logo" className="w-20" />
-              <span className="badge badge-primary">admin</span>
-            </Link>
-          </li>
-          <hr />
-          <li className="mt-3">
-            <Link to="/dashboard">
-              <MdDashboard /> Dashboard
-            </Link>
-          </li>
-          <li>
-            <Link to="/dashboard">
-              <FaShoppingBag /> Manage Bookings
-            </Link>
-          </li>
-          <li>
-            <Link to="/dashboard/add-menu">
-              <FaPlusCircle /> Add Menu
-            </Link>
-          </li>
-          <li>
-            <Link to="/dashboard/manage-items">
-              <FaEdit /> Manage Items
-            </Link>
-          </li>
-          <li className="mb-3">
-            <Link to="/dashboard/users">
-              <FaUser /> All Users
-            </Link>
-          </li>
-          <hr />
-          {sharedLinks}
-        </ul>
+        </main>
       </div>
     </div>
   );

@@ -8,10 +8,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        green: "#39DB4A",
-        red: "#FF6868",
+        myGreen: "#39DB4A",
+        myRed: "#FF6868",
         secondary: "#555",
-        prigmayBG: "#FCFCFC",
+        primaryBG: "#FCFCFC",
       },
     },
   },

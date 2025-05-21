@@ -1,19 +1,22 @@
 import { Router } from "express";
-import { isAdmin, isAuthenticated } from "../middleware/authMiddleware.js";
+import { verifyToken } from "../middleware/verifyToken.js";
+import { verifyAdmin } from "../middleware/verifyAdmin.js";
 import {
   createUser,
   deleteUser,
   getAdmin,
   getAllUsers,
   makeAdmin,
+  logout
 } from "../controllers/userController.js";
 
 const router = Router();
 
-router.get("/", isAuthenticated, isAdmin, getAllUsers);
+router.get("/", verifyToken, verifyAdmin,  getAllUsers);
 router.post("/", createUser);
-router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
-router.get("/admin/:email", isAuthenticated, getAdmin);
-router.patch("/admin/:id", isAuthenticated, isAdmin, makeAdmin);
+router.post("/logout", logout)
+router.delete("/:id",verifyToken, verifyAdmin,   deleteUser);
+router.get("/admin/:email",verifyToken,  getAdmin);
+router.patch("/admin/:id",verifyToken, verifyAdmin,   makeAdmin);
 
 export default router;

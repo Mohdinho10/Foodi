@@ -4,13 +4,28 @@ import { apiSlice } from "./apiSlice";
 
 export const menuApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all menu items
     getMenuItems: builder.query({
-      query: () => ({
-        url: `${MENU_URL}`,
-        method: "GET",
-        credentials: "include",
-      }),
+      query: ({
+        page = 1,
+        pageSize = 10,
+        category = "",
+        sort = "default",
+        search = "",
+      }) => {
+        const params = new URLSearchParams({
+          page,
+          pageSize,
+          category,
+          sort,
+          search,
+        });
+
+        return {
+          url: `${MENU_URL}?${params.toString()}`,
+          method: "GET",
+          credentials: "include",
+        };
+      },
       providesTags: ["Menu"],
     }),
 
@@ -21,7 +36,7 @@ export const menuApiSlice = apiSlice.injectEndpoints({
         method: "GET",
         credentials: "include",
       }),
-      providesTags: (result, error, id) => [{ type: "Menu", id }],
+      providesTags: ["Menu"],
     }),
 
     // Create menu item

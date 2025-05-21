@@ -20,24 +20,21 @@ const AuthProvider = ({ children }) => {
           uid: currentUser.uid,
         };
 
-        // Optional: Get JWT token from your backend
         try {
-          const res = await axios.post("http://localhost:3000/jwt", {
-            email: currentUser.email,
-          });
+          // ✅ This will store the token in a cookie
+          await axios.post(
+            "http://localhost:3000/jwt",
+            { email: currentUser.email },
+            { withCredentials: true } // ✅ Important!
+          );
 
-          if (res.data.token) {
-            localStorage.setItem("access-token", res.data.token);
-          }
+          dispatch(setCredentials(userInfo));
         } catch (err) {
           console.error("Error fetching token:", err);
         }
-
-        // Update Redux
-        dispatch(setCredentials(userInfo));
       } else {
         dispatch(logout());
-        localStorage.removeItem("access-token");
+        // No need to remove token from localStorage anymore
       }
     });
 

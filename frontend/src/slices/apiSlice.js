@@ -1,10 +1,19 @@
-import { BASE_URL } from "../constants";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const baseQuery = fetchBaseQuery({ baseUrl: BASE_URL });
-
 export const apiSlice = createApi({
-  baseQuery,
-  tagTypes: ["Menu", "User", "Cart"],
+  baseQuery: fetchBaseQuery({
+    baseUrl: "http://localhost:3000", // or wherever your API lives
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("access-token");
+
+      if (token) {
+        headers.set("authorization", `Bearer ${token}`);
+      }
+
+      return headers;
+    },
+    credentials: "include", // optional
+  }),
+  tagTypes: ["User", "Cart", "Menu"],
   endpoints: () => ({}),
 });
