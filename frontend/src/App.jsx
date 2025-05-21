@@ -18,7 +18,15 @@ import UpdateMenuPage from "./pages/admin/UpdateMenuPage";
 function App() {
   return (
     <>
-      <Toaster reverseOrder={false} />
+      <Toaster
+        position="top-right" // 👈 Top-right corner
+        toastOptions={{
+          style: {
+            zIndex: 9999, // 👈 Ensure it's above Navbar
+          },
+        }}
+        reverseOrder={false}
+      />
       <BrowserRouter>
         <Routes>
           {/* Main layout routes */}
@@ -39,16 +47,19 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoutes>
-                <DashboardLayout />
-              </ProtectedRoutes>
+              // <ProtectedRoutes>
+              <DashboardLayout />
+              // </ProtectedRoutes>
             }
           >
-            <Route index element={<DashboardPage />} />
-            <Route path="users" element={<UsersPage />} />
-            <Route path="add-menu" element={<AddMenuPage />} />
-            <Route path="manage-items" element={<ManageItemsPage />} />
-            <Route path="update-menu/:id" element={<UpdateMenuPage />} />
+            {/* Protected routes */}
+            <Route element={<ProtectedRoutes />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="add-menu" element={<AddMenuPage />} />
+              <Route path="manage-items" element={<ManageItemsPage />} />
+              <Route path="update-menu/:id" element={<UpdateMenuPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

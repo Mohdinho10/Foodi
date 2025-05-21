@@ -9,7 +9,12 @@ body {
 
 header,
 nav {
-  z-index: 10001 !important;
+  z-index: 8888 !important;
+}
+
+[data-sonner-toast],
+.react-hot-toast {
+  z-index: 999999 !important;
 }
 
 .subtitle {

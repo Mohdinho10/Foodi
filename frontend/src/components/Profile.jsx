@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAuth, signOut } from "firebase/auth";
 import { logout } from "../slices/authSlice";
 import app from "../firebase/firebase.config";
+import { useLogoutMutation } from "../slices/userApiSlice"; // Import the logout mutation
 
 const auth = getAuth(app);
 
@@ -12,16 +13,17 @@ const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
-        dispatch(logout());
-        localStorage.removeItem("access-token");
-        navigate("/");
-      })
-      .catch((error) => {
-        console.log("Logout error:", error);
-      });
+  const [logoutRequest] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Firebase sign-out
+      await logoutRequest(); // Backend logout (clears cookie)
+      dispatch(logout()); // Redux state update
+      navigate("/"); // Redirect to home
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -29,7 +31,6 @@ const Profile = () => {
       <div className="drawer drawer-end z-50">
         <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content">
-          {/* Profile button with avatar */}
           <label
             htmlFor="my-drawer-4"
             className="drawer-button avatar btn btn-ghost btn-circle"

@@ -81,7 +81,7 @@ const Cards = ({ item }) => {
         // className={`heartStar rating absolute right-2 top-2 gap-1 bg-green p-4 ${
         //   isHeartFilled ? "text-rose-500" : "text-white"
         // }`}
-        className={`btn btn-circle absolute right-2 top-2 bg-green transition-colors duration-300 ${
+        className={`btn btn-circle absolute right-2 top-2 bg-myGreen transition-colors duration-300 ${
           isHeartFilled ? "text-rose-500" : "text-white"
         }`}
         onClick={handleHeartClick}
@@ -104,9 +104,12 @@ const Cards = ({ item }) => {
         <p>Description of the item</p>
         <div className="card-actions mt-2 items-center justify-between">
           <h5 className="font-semibold">
-            <span className="text-sm text-red">$</span> {price}
+            <span className="text-red text-sm">$</span> {price}
           </h5>
-          <button onClick={handleAddToCart} className="btn bg-green text-white">
+          <button
+            onClick={handleAddToCart}
+            className="btn bg-myGreen text-white"
+          >
             Add to Cart
           </button>
         </div>

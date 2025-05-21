@@ -1,70 +1,64 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Cards from "../components/Cards";
 import { FaFilter } from "react-icons/fa";
 import { useGetMenuItemsQuery } from "../slices/menuApiSlice";
+import debounce from "lodash/debounce";
 
 const Menu = () => {
-  const [filteredItems, setFilteredItems] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [sortOption, setSortOption] = useState("default");
+  const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(8);
 
-  const { data: menu = [], isLoading, isError } = useGetMenuItemsQuery();
+  const itemsPerPage = 8;
 
-  useEffect(() => {
-    if (menu.length > 0) {
-      setFilteredItems(menu);
-    }
-  }, [menu]);
+  const { data, isLoading, isError } = useGetMenuItemsQuery({
+    page: currentPage,
+    pageSize: itemsPerPage,
+    category: selectedCategory,
+    sort: mapSortOption(sortOption),
+    search: searchText,
+  });
 
-  const filterItems = (category) => {
-    const filtered =
-      category === "all"
-        ? menu
-        : menu.filter((item) => item.category === category);
+  const items = data?.items || [];
+  const totalPages = data?.totalPages || 1;
 
-    setFilteredItems(filtered);
-    setSelectedCategory(category);
-    setCurrentPage(1);
-  };
-
-  const showAll = () => {
-    setFilteredItems(menu);
-    setSelectedCategory("all");
-    setCurrentPage(1);
-  };
-
-  const handleSortChange = (option) => {
-    setSortOption(option);
-    let sortedItems = [...filteredItems];
-
+  // Sort mapping: frontend option → backend sort param
+  function mapSortOption(option) {
     switch (option) {
       case "A-Z":
-        sortedItems.sort((a, b) => a.name.localeCompare(b.name));
-        break;
+        return "name-asc";
       case "Z-A":
-        sortedItems.sort((a, b) => b.name.localeCompare(a.name));
-        break;
+        return "name-desc";
       case "low-to-high":
-        sortedItems.sort((a, b) => a.price - b.price);
-        break;
+        return "price-asc";
       case "high-to-low":
-        sortedItems.sort((a, b) => b.price - a.price);
-        break;
+        return "price-desc";
       default:
-        break;
+        return "default";
     }
+  }
 
-    setFilteredItems(sortedItems);
+  // Handle category filter
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category === "all" ? "" : category);
     setCurrentPage(1);
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+  // Handle sort option change
+  const handleSortChange = (option) => {
+    setSortOption(option);
+    setCurrentPage(1);
+  };
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  // Debounced search input
+  const handleSearchChange = useCallback(
+    debounce((value) => {
+      setSearchText(value);
+      setCurrentPage(1);
+    }, 300),
+    [],
+  );
 
   if (isLoading) return <p className="py-10 text-center">Loading menu...</p>;
   if (isError)
@@ -79,37 +73,53 @@ const Menu = () => {
         <div className="flex flex-col items-center justify-center py-48">
           <div className="space-y-7 px-4 text-center">
             <h2 className="text-4xl font-bold leading-snug md:text-5xl">
-              For the Love of Delicious <span className="text-green">Food</span>
+              For the Love of Delicious{" "}
+              <span className="text-myGreen">Food</span>
             </h2>
             <p className="mx-auto text-xl text-[#4A4A4A] md:w-4/5">
               Come with family & feel the joy of mouthwatering food...
             </p>
-            <button className="bg-green btn rounded-full px-8 py-3 font-semibold text-white">
+            <button className="btn rounded-full bg-myGreen px-8 py-3 font-semibold text-white">
               Order Now
             </button>
           </div>
         </div>
       </div>
 
-      {/* Filter and Sort UI */}
+      {/* Search, Filter and Sort */}
       <div className="section-container">
-        <div className="mb-8 flex flex-col space-y-3 md:flex-row md:justify-between md:space-y-0">
-          <div className="flex flex-wrap gap-4">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          {/* Category buttons */}
+          <div className="flex flex-wrap gap-2">
             {["all", "salad", "pizza", "soup", "dessert", "drinks"].map(
               (cat) => (
                 <button
                   key={cat}
-                  onClick={() => (cat === "all" ? showAll() : filterItems(cat))}
-                  className={selectedCategory === cat ? "active" : ""}
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`capitalize ${
+                    selectedCategory === cat ||
+                    (cat === "all" && selectedCategory === "")
+                      ? "active"
+                      : ""
+                  }`}
                 >
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  {cat}
                 </button>
               ),
             )}
           </div>
 
+          {/* Search input */}
+          <input
+            type="text"
+            placeholder="Search items..."
+            className="input-bordered input w-full max-w-xs focus:outline-none"
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+
+          {/* Sort dropdown */}
           <div className="flex items-center">
-            <div className="bg-black p-2">
+            <div className="mr-2 bg-black p-2">
               <FaFilter className="h-4 w-4 text-white" />
             </div>
             <select
@@ -118,7 +128,7 @@ const Menu = () => {
               value={sortOption}
               className="rounded-sm bg-black px-2 py-1 text-white"
             >
-              <option value="default"> Default</option>
+              <option value="default">Default</option>
               <option value="A-Z">A-Z</option>
               <option value="Z-A">Z-A</option>
               <option value="low-to-high">Low to High</option>
@@ -129,27 +139,25 @@ const Menu = () => {
 
         {/* Menu Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {currentItems.map((item, index) => (
-            <Cards key={index} item={item} />
+          {items.map((item, index) => (
+            <Cards key={item._id || index} item={item} />
           ))}
         </div>
-      </div>
 
-      {/* Pagination */}
-      <div className="my-8 flex flex-wrap justify-center gap-2">
-        {Array.from({
-          length: Math.ceil(filteredItems.length / itemsPerPage),
-        }).map((_, i) => (
-          <button
-            key={i + 1}
-            onClick={() => paginate(i + 1)}
-            className={`mx-1 rounded-full px-3 py-1 ${
-              currentPage === i + 1 ? "bg-green text-white" : "bg-gray-200"
-            }`}
-          >
-            {i + 1}
-          </button>
-        ))}
+        {/* Pagination */}
+        <div className="my-8 flex flex-wrap justify-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`mx-1 rounded-full px-3 py-1 ${
+                currentPage === i + 1 ? "bg-myGreen text-white" : "bg-gray-200"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -53,34 +53,34 @@ const AddMenu = () => {
   };
 
   return (
-    <div className="mx-auto w-full px-4 md:w-[870px]">
-      <h2 className="my-4 text-2xl font-semibold">
-        Upload A New <span className="text-green">Menu Item</span>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <h2 className="mb-8 text-center text-2xl font-bold">
+        Upload a New <span className="text-green">Menu Item</span>
       </h2>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Recipe Name */}
         <div className="form-control w-full">
           <label className="label">
-            <span className="label-text">Recipe Name*</span>
+            <span className="label-text font-medium">Recipe Name*</span>
           </label>
           <input
             type="text"
             {...register("name", { required: true })}
-            placeholder="Recipe Name"
-            className="input input-bordered w-full"
+            placeholder="e.g. Spicy Thai Noodles"
+            className="input-bordered input w-full focus:outline-none"
           />
         </div>
 
-        {/* Category and Price */}
-        <div className="flex items-center gap-4">
-          <div className="form-control my-6 w-full">
+        {/* Category & Price */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="form-control">
             <label className="label">
-              <span className="label-text">Category*</span>
+              <span className="label-text font-medium">Category*</span>
             </label>
             <select
               {...register("category", { required: true })}
-              className="select select-bordered"
+              className="select-bordered select w-full focus:outline-none"
               defaultValue="default"
             >
               <option disabled value="default">
@@ -95,43 +95,52 @@ const AddMenu = () => {
             </select>
           </div>
 
-          <div className="form-control w-full">
+          <div className="form-control">
             <label className="label">
-              <span className="label-text">Price*</span>
+              <span className="label-text font-medium">Price*</span>
             </label>
             <input
               type="number"
               {...register("price", { required: true })}
-              placeholder="Price"
-              className="input input-bordered w-full"
+              placeholder="e.g. 12.99"
+              className="input-bordered input w-full focus:outline-none"
             />
           </div>
         </div>
 
         {/* Recipe Details */}
         <div className="form-control">
-          <label className="label">
-            <span className="label-text">Recipe Details</span>
+          <label className="label md:hidden">
+            <span className="label-text font-medium">Recipe Details*</span>
           </label>
           <textarea
             {...register("recipe", { required: true })}
-            className="textarea textarea-bordered h-24"
-            placeholder="Tell the world about your recipe"
+            className="textarea-bordered textarea min-h-[100px] w-full resize-none focus:outline-none"
+            placeholder="Write something delicious..."
           ></textarea>
         </div>
 
         {/* Image Upload */}
-        <div className="form-control my-6 w-full">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">Upload Image*</span>
+          </label>
           <input
             {...register("image", { required: true })}
             type="file"
-            className="file-input w-full max-w-xs"
+            className="file-input-bordered file-input w-full"
           />
         </div>
 
-        <button className="btn bg-green px-6 text-white">
-          Add Item <FaUtensils />
-        </button>
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="hover:bg-green-dark btn flex items-center gap-2 bg-green text-white"
+          >
+            Add Item <FaUtensils />
+          </button>
+        </div>
       </form>
     </div>
   );

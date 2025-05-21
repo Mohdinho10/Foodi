@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import morgan from "morgan";
+import jwt from "jsonwebtoken";
 import bodyParser from "body-parser";
 import userRoutes from "./routes/userRoutes.js";
 import menuRoutes from "./routes/menuRoutes.js";
@@ -31,6 +32,26 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+
+
+
+app.post("/jwt", async (req, res) => {
+  const { email } = req.body;
+
+  const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
+  res
+    .cookie("jwt", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // HTTPS only in prod
+      sameSite: "Strict", // Protects against CSRF
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
+    .send({ success: true });
+});
+
 
 app.use("/api/menu", menuRoutes);
 app.use("/api/users", userRoutes);

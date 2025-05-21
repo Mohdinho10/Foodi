@@ -1,72 +1,113 @@
+import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
+import debounce from "lodash/debounce";
 import {
   useGetMenuItemsQuery,
   useDeleteMenuItemMutation,
 } from "../../slices/menuApiSlice";
 
 const ManageItems = () => {
-  const {
-    data: menu = [],
-    isLoading,
-    isError,
-    refetch,
-  } = useGetMenuItemsQuery();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [sort, setSort] = useState("default");
+
+  const { data, refetch } = useGetMenuItemsQuery({
+    page,
+    pageSize: 5,
+    category,
+    sort,
+    search,
+  });
+
+  const menu = data?.items || [];
+  const totalPages = data?.totalPages || 1;
 
   const [deleteMenuItem] = useDeleteMenuItemMutation();
 
   const handleDeleteItem = async (item) => {
-    Swal.fire({
+    const result = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await deleteMenuItem(item._id).unwrap();
-          refetch();
-          Swal.fire({
-            title: "Deleted!",
-            text: "The item has been deleted.",
-            icon: "success",
-          });
-        } catch (error) {
-          console.error("Failed to delete item:", error);
-          Swal.fire({
-            title: "Error!",
-            text: "Failed to delete the item.",
-            icon: "error",
-          });
-        }
-      }
     });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteMenuItem(item._id).unwrap();
+        refetch();
+        Swal.fire("Deleted!", "Item has been deleted.", "success");
+      } catch (error) {
+        Swal.fire("Error!", "Failed to delete item.", "error");
+      }
+    }
   };
 
-  if (isLoading) {
-    return (
-      <p className="py-10 text-center text-lg font-semibold">Loading...</p>
-    );
-  }
-
-  if (isError) {
-    return (
-      <p className="py-10 text-center text-red-500">
-        Failed to load menu items.
-      </p>
-    );
-  }
+  // Debounced search input
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      setSearch(value);
+      setPage(1);
+    }, 300),
+    [],
+  );
 
   return (
     <div className="mx-auto w-full px-4 md:w-[870px]">
       <h2 className="my-4 text-2xl font-semibold">
-        Manage All <span className="text-green">Menu Items</span>
+        Manage <span className="text-green">Menu Items</span>
       </h2>
-      <div className="overflow-x-auto">
+
+      {/* Search, Filter, Sort */}
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <input
+          type="text"
+          placeholder="Search item..."
+          onChange={(e) => debouncedSearch(e.target.value)}
+          className="input-bordered input w-full max-w-xs focus:outline-none"
+        />
+
+        <div className="flex gap-2">
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setPage(1);
+            }}
+            className="select-bordered select focus:outline-none"
+          >
+            <option value="">All Categories</option>
+            <option value="drinks">Drinks</option>
+            <option value="dessert">Dessert</option>
+            <option value="salad">Salad</option>
+            <option value="pizza">Pizza</option>
+            <option value="popular">Popular</option>
+            {/* Add more categories as needed */}
+          </select>
+
+          <select
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value);
+              setPage(1);
+            }}
+            className="select-bordered select focus:outline-none"
+          >
+            <option value="default">Newest</option>
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="price-desc">Price (High to Low)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="table">
           <thead>
             <tr>
@@ -81,21 +122,19 @@ const ManageItems = () => {
           <tbody>
             {menu.map((item, index) => (
               <tr key={item._id}>
-                <th>{index + 1}</th>
+                <th>{(page - 1) * 5 + index + 1}</th>
                 <td>
-                  <div className="flex items-center gap-3">
-                    <div className="avatar">
-                      <div className="mask mask-squircle h-12 w-12">
-                        <img src={item.image} alt={item.name} />
-                      </div>
-                    </div>
-                  </div>
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="h-12 w-12 rounded object-cover"
+                  />
                 </td>
                 <td>{item.name}</td>
                 <td>${item.price}</td>
                 <td>
                   <Link to={`/dashboard/update-menu/${item._id}`}>
-                    <button className="btn btn-ghost btn-xs bg-orange-500 text-white">
+                    <button className="btn btn-xs bg-orange-500 text-white">
                       <FaEdit />
                     </button>
                   </Link>
@@ -103,7 +142,7 @@ const ManageItems = () => {
                 <td>
                   <button
                     onClick={() => handleDeleteItem(item)}
-                    className="btn btn-ghost btn-xs text-red"
+                    className="btn btn-xs text-red-500"
                   >
                     <FaTrashAlt />
                   </button>
@@ -112,6 +151,57 @@ const ManageItems = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="space-y-4 md:hidden">
+        {menu.map((item) => (
+          <div key={item._id} className="rounded border p-4 shadow">
+            <div className="flex gap-4">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="h-16 w-16 rounded object-cover"
+              />
+              <div>
+                <h3 className="text-lg font-semibold">{item.name}</h3>
+                <p>${item.price}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Link to={`/dashboard/update-menu/${item._id}`}>
+                <button className="btn btn-xs bg-orange-500 text-white">
+                  <FaEdit /> Edit
+                </button>
+              </Link>
+              <button
+                onClick={() => handleDeleteItem(item)}
+                className="btn btn-xs bg-red-500 text-white"
+              >
+                <FaTrashAlt /> Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-8 w-full">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+          {[...Array(totalPages).keys()].map((num) => (
+            <button
+              key={num + 1}
+              onClick={() => setPage(num + 1)}
+              className={`min-w-[40px] rounded-full px-3 py-1 text-sm transition-all duration-200 ${
+                page === num + 1
+                  ? "bg-myGreen text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {num + 1}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

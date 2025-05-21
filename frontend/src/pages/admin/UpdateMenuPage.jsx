@@ -1,27 +1,28 @@
-import { useLoaderData, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
 import { FaUtensils } from "react-icons/fa";
 import axios from "axios";
-import { useUpdateMenuItemMutation } from "../../slices/menuApiSlice";
+import {
+  useGetMenuItemByIdQuery,
+  useUpdateMenuItemMutation,
+} from "../../slices/menuApiSlice";
 
 const UpdateMenu = () => {
-  const item = useLoaderData();
-  const { register, handleSubmit, reset } = useForm();
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { register, handleSubmit, reset } = useForm();
 
+  const { data: item, isLoading, isError } = useGetMenuItemByIdQuery(id);
   const [updateMenuItem] = useUpdateMenuItemMutation();
 
-  const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
-  const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
+  const image_hosting_api = ""; // Replace with your actual API key
 
   const onSubmit = async (data) => {
     try {
       const imageFile = { image: data.image[0] };
       const hostingImg = await axios.post(image_hosting_api, imageFile, {
-        headers: {
-          "content-type": "multipart/form-data",
-        },
+        headers: { "content-type": "multipart/form-data" },
       });
 
       if (hostingImg.data.success) {
@@ -33,7 +34,7 @@ const UpdateMenu = () => {
           image: hostingImg.data.data.display_url,
         };
 
-        await updateMenuItem({ id: item._id, ...updatedItem }).unwrap();
+        await updateMenuItem({ id, ...updatedItem }).unwrap();
 
         reset();
         Swal.fire({
@@ -55,14 +56,20 @@ const UpdateMenu = () => {
     }
   };
 
+  if (isLoading) return <p className="py-10 text-center">Loading item...</p>;
+  if (isError || !item)
+    return (
+      <p className="py-10 text-center text-red-500">Failed to load item.</p>
+    );
+
   return (
-    <div className="mx-auto w-full px-4 md:w-[870px]">
-      <h2 className="my-4 text-2xl font-semibold">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8">
+      <h2 className="mb-6 text-center text-2xl font-semibold md:text-left">
         Update This <span className="text-green">Menu Item</span>
       </h2>
 
-      {/* form here */}
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Recipe Name */}
         <div className="form-control w-full">
           <label className="label">
             <span className="label-text">Recipe Name*</span>
@@ -72,20 +79,21 @@ const UpdateMenu = () => {
             defaultValue={item.name}
             {...register("name", { required: true })}
             placeholder="Recipe Name"
-            className="input input-bordered w-full"
+            className="input-bordered input w-full focus:outline-none"
           />
         </div>
 
-        {/* 2nd row */}
-        <div className="flex items-center gap-4">
-          <div className="form-control my-6 w-full">
+        {/* Category & Price */}
+        <div className="flex flex-col gap-4 md:flex-row">
+          {/* Category */}
+          <div className="form-control w-full">
             <label className="label">
               <span className="label-text">Category*</span>
             </label>
             <select
               {...register("category", { required: true })}
-              className="select select-bordered"
               defaultValue={item.category}
+              className="select-bordered select w-full focus:outline-none"
             >
               <option disabled value="default">
                 Select a category
@@ -99,6 +107,7 @@ const UpdateMenu = () => {
             </select>
           </div>
 
+          {/* Price */}
           <div className="form-control w-full">
             <label className="label">
               <span className="label-text">Price*</span>
@@ -108,36 +117,43 @@ const UpdateMenu = () => {
               defaultValue={item.price}
               {...register("price", { required: true })}
               placeholder="Price"
-              className="input input-bordered w-full"
+              className="input-bordered input w-full focus:outline-none"
             />
           </div>
         </div>
 
-        {/* 3rd row */}
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">Recipe Details</span>
+        {/* Recipe Details */}
+        <div className="form-control w-full">
+          <label htmlFor="recipe-details" className="mb-1 text-gray-700">
+            Recipe Details*
           </label>
           <textarea
+            id="recipe-details"
             defaultValue={item.recipe}
             {...register("recipe", { required: true })}
-            className="textarea textarea-bordered h-24"
+            className="textarea-bordered textarea h-28 w-full resize-none focus:outline-none"
             placeholder="Tell the world about your recipe"
           ></textarea>
         </div>
 
-        {/* 4th row */}
-        <div className="form-control my-6 w-full">
+        {/* Image Upload */}
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Upload Image*</span>
+          </label>
           <input
             {...register("image", { required: true })}
             type="file"
-            className="file-input w-full max-w-xs"
+            className="file-input-bordered file-input w-full max-w-xs focus:outline-none"
           />
         </div>
 
-        <button className="btn bg-green px-6 text-white">
-          Update Item <FaUtensils />
-        </button>
+        {/* Submit Button */}
+        <div className="text-center md:text-left">
+          <button className="btn w-full bg-myGreen px-6 text-white md:w-auto">
+            Update Item <FaUtensils className="ml-2" />
+          </button>
+        </div>
       </form>
     </div>
   );

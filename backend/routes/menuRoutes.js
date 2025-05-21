@@ -10,11 +10,11 @@ import {
 
 const router = Router();
 
-// GET all menu items
-router.get("/", getAllMenuItems);
-
 // GET popular items (specific route first to avoid :id conflict)
 router.get("/popular", getPopularDishes);
+
+// GET all menu items
+router.get("/", getAllMenuItems);
 
 // POST a new menu item
 router.post("/", createMenuItem);

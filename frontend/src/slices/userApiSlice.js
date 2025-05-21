@@ -23,6 +23,13 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+    logout: builder.mutation({
+      query: () => ({
+        url: `${USERS_URL}/logout`,
+        method: "POST",
+        credentials: "include",
+      }),
+    }),
 
     // Delete a user (admin only)
     deleteUser: builder.mutation({
@@ -54,11 +61,13 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["User"],
     }),
   }),
+
 });
 
 export const {
   useGetAllUsersQuery,
   useCreateUserMutation,
+  useLogoutMutation,
   useDeleteUserMutation,
   useGetAdminStatusQuery,
   useMakeAdminMutation,
