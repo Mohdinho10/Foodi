@@ -7,6 +7,7 @@ import {
   useDeleteCartItemMutation,
 } from "../slices/cartApiSlice";
 import { useSelector } from "react-redux";
+import { formatCurrency } from "../utils/currency";
 
 const CartPage = () => {
   const user = useSelector((state) => state.auth.userInfo);
@@ -15,8 +16,9 @@ const CartPage = () => {
     data: cart = [],
     isLoading,
     isError,
+    refetch, // ✅ Added for refreshing without reload
   } = useGetCartByEmailQuery(user?.email, {
-    skip: !user?.email, // skip query if user is not yet loaded
+    skip: !user?.email,
   });
 
   const [updateCartItem] = useUpdateCartItemMutation();
@@ -29,7 +31,8 @@ const CartPage = () => {
       await updateCartItem({
         id: item._id,
         updatedData: { ...item, quantity: item.quantity + 1 },
-      });
+      }).unwrap();
+      await refetch(); // ✅ refresh UI
     } catch (err) {
       console.error("Error increasing quantity:", err);
     }
@@ -41,7 +44,8 @@ const CartPage = () => {
         await updateCartItem({
           id: item._id,
           updatedData: { ...item, quantity: item.quantity - 1 },
-        });
+        }).unwrap();
+        await refetch(); // ✅ refresh UI
       } catch (err) {
         console.error("Error decreasing quantity:", err);
       }
@@ -60,7 +64,8 @@ const CartPage = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await deleteCartItem(item._id);
+          await deleteCartItem(item._id).unwrap();
+          await refetch(); // ✅ refresh cart instantly
           Swal.fire("Deleted!", "Your item has been deleted.", "success");
         } catch (err) {
           console.error("Error deleting cart item:", err);
@@ -89,7 +94,7 @@ const CartPage = () => {
         <div className="flex flex-col items-center justify-center py-28">
           <div className="space-y-7 px-4 text-center">
             <h2 className="text-4xl font-bold leading-snug md:text-5xl md:leading-snug">
-              Items Added to The <span className="text-green">Cart</span>
+              Items Added to The <span className="text-myGreen">Cart</span>
             </h2>
           </div>
         </div>
@@ -99,7 +104,7 @@ const CartPage = () => {
         <div>
           <div className="overflow-x-auto">
             <table className="table">
-              <thead className="bg-green text-white">
+              <thead className="bg-myGreen text-white">
                 <tr>
                   <th>#</th>
                   <th>Food</th>
@@ -141,10 +146,10 @@ const CartPage = () => {
                         +
                       </button>
                     </td>
-                    <td>${calculateTotalPrice(item).toFixed(2)}</td>
+                    <td>{formatCurrency(calculateTotalPrice(item))}</td>
                     <td>
                       <button
-                        className="btn btn-sm text-red border-none bg-transparent"
+                        className="text-red btn btn-sm border-none bg-transparent"
                         onClick={() => handleDelete(item)}
                       >
                         <FaTrash />
@@ -171,21 +176,24 @@ const CartPage = () => {
               <h3 className="text-lg font-semibold">Shopping Details</h3>
               <p>Total Items: {cart.length}</p>
               <p>
-                Total Price: <span>${orderTotal.toFixed(2)}</span>
+                Total Price: <span>{formatCurrency(orderTotal)}</span>
               </p>
-              <button className="btn btn-md bg-green px-8 py-1 text-white">
+              <Link
+                to={"/payment"}
+                className="btn btn-md bg-myGreen px-8 py-1 text-white"
+              >
                 Proceed to Checkout
-              </button>
+              </Link>
             </div>
           </div>
         </div>
       ) : (
         <div className="mt-20 text-center">
           <p>Cart is empty. Please add products.</p>
-          <Link to="/menu">
-            <button className="btn bg-green mt-3 text-white">
+          <Link to="menu">
+            <Link to="/menu" className="btn mt-3 bg-myGreen text-white">
               Back to Menu
-            </button>
+            </Link>
           </Link>
         </div>
       )}

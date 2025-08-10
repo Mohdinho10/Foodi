@@ -109,10 +109,10 @@ const DashboardLayout = () => {
             <li>
               <Link
                 onClick={() => setSidebarOpen(false)}
-                to="/dashboard"
+                to="/dashboard/orders"
                 className="flex items-center gap-2"
               >
-                <FaShoppingBag /> Manage Bookings
+                <FaShoppingBag /> Orders
               </Link>
             </li>
             <li>

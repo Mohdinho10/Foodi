@@ -1,10 +1,13 @@
-import avatarImg from "/images/avatar.jpg";
+import avatarImg from "/images/avatar2.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAuth, signOut } from "firebase/auth";
 import { logout } from "../slices/authSlice";
 import app from "../firebase/firebase.config";
-import { useLogoutMutation } from "../slices/userApiSlice"; // Import the logout mutation
+import {
+  useGetAdminStatusQuery,
+  useLogoutMutation,
+} from "../slices/userApiSlice"; // Import the logout mutation
 
 const auth = getAuth(app);
 
@@ -13,6 +16,11 @@ const Profile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const { data: adminData } = useGetAdminStatusQuery(user?.email, {
+    skip: !user?.email,
+  });
+
+  console.log("Admin Data:", adminData);
   const [logoutRequest] = useLogoutMutation();
 
   const handleLogout = async () => {
@@ -61,9 +69,11 @@ const Profile = () => {
             <li>
               <Link to="/settings">Settings</Link>
             </li>
-            <li>
-              <Link to="/dashboard">Dashboard</Link>
-            </li>
+            {adminData?.admin && (
+              <li>
+                <Link to="/dashboard">Dashboard</Link>
+              </li>
+            )}
             <li>
               <button onClick={handleLogout}>Logout</button>
             </li>

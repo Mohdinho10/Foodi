@@ -5,15 +5,21 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import morgan from "morgan";
 import jwt from "jsonwebtoken";
+import Stripe from "stripe";
 import bodyParser from "body-parser";
 import userRoutes from "./routes/userRoutes.js";
 import menuRoutes from "./routes/menuRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import { Router } from "express";
 import { notFound, errorHandler } from "./middleware/ErrorMiddleware.js";
 
 dotenv.config();
 
 const app = express();
+const router = Router();
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const port = process.env.PORT;
 
@@ -33,8 +39,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-
-
 app.post("/jwt", async (req, res) => {
   const { email } = req.body;
 
@@ -52,10 +56,30 @@ app.post("/jwt", async (req, res) => {
     .send({ success: true });
 });
 
-
 app.use("/api/menu", menuRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
+
+app.post("/create-payment-intent", async (req, res) => {
+  const { totalPrice } = req.body;
+  const amount = totalPrice * 100; // Convert to cents
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount, // amount in cents
+      currency: "usd",
+      payment_method_types: ["card"],
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error("Stripe error:", error);
+    res.status(500).send({ error: "Failed to create payment intent" });
+  }
+});
 
 app.use(notFound);
 app.use(errorHandler);

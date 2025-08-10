@@ -9,11 +9,13 @@ import MenuItemPage from "./pages/MenuItemPage";
 import OrdersPage from "./pages/OrdersPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import CartPage from "./pages/CartPage";
+import PaymentPage from "./pages/PaymentPage";
 import DashboardPage from "./pages/admin/DashboardPage";
 import UsersPage from "./pages/admin/UsersPage";
 import AddMenuPage from "./pages/admin/AddMenuPage";
 import ManageItemsPage from "./pages/admin/ManageItemsPage";
 import UpdateMenuPage from "./pages/admin/UpdateMenuPage";
+import AdminOrdersPage from "./pages/admin/OrdersPage";
 
 function App() {
   return (
@@ -35,7 +37,7 @@ function App() {
             <Route path="menu" element={<MenuPage />} />
             <Route path="menu/:id" element={<MenuItemPage />} />
             <Route path="cart" element={<CartPage />} />
-
+            <Route path="payment" element={<PaymentPage />} />
             {/* Protected routes */}
             <Route element={<ProtectedRoutes />}>
               <Route path="orders" element={<OrdersPage />} />
@@ -59,6 +61,7 @@ function App() {
               <Route path="add-menu" element={<AddMenuPage />} />
               <Route path="manage-items" element={<ManageItemsPage />} />
               <Route path="update-menu/:id" element={<UpdateMenuPage />} />
+              <Route path="orders" element={<AdminOrdersPage />} />
             </Route>
           </Route>
         </Routes>

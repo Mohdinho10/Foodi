@@ -16,36 +16,46 @@ const UpdateMenu = () => {
   const { data: item, isLoading, isError } = useGetMenuItemByIdQuery(id);
   const [updateMenuItem] = useUpdateMenuItemMutation();
 
-  const image_hosting_api = ""; // Replace with your actual API key
+  const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
+  const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
 
   const onSubmit = async (data) => {
     try {
-      const imageFile = { image: data.image[0] };
-      const hostingImg = await axios.post(image_hosting_api, imageFile, {
-        headers: { "content-type": "multipart/form-data" },
-      });
+      let imageURL = item.image;
 
-      if (hostingImg.data.success) {
-        const updatedItem = {
-          name: data.name,
-          category: data.category,
-          price: parseFloat(data.price),
-          recipe: data.recipe,
-          image: hostingImg.data.data.display_url,
-        };
-
-        await updateMenuItem({ id, ...updatedItem }).unwrap();
-
-        reset();
-        Swal.fire({
-          position: "top-end",
-          icon: "success",
-          title: "Your item updated successfully!",
-          showConfirmButton: false,
-          timer: 1500,
+      // Only upload a new image if a file is selected
+      if (data.image && data.image[0]) {
+        const imageFile = { image: data.image[0] };
+        const hostingImg = await axios.post(image_hosting_api, imageFile, {
+          headers: { "content-type": "multipart/form-data" },
         });
-        navigate("/dashboard/manage-items");
+
+        if (hostingImg.data.success) {
+          imageURL = hostingImg.data.data.display_url;
+        } else {
+          throw new Error("Image upload failed");
+        }
       }
+
+      const updatedItem = {
+        name: data.name,
+        category: data.category,
+        price: parseFloat(data.price),
+        recipe: data.recipe,
+        image: imageURL,
+      };
+
+      await updateMenuItem({ id, ...updatedItem }).unwrap();
+
+      reset();
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Your item updated successfully!",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      navigate("/dashboard/manage-items");
     } catch (error) {
       console.error("Error updating item:", error);
       Swal.fire({

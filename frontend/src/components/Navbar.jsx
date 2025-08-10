@@ -163,7 +163,7 @@ const Navbar = () => {
           ) : (
             <button
               onClick={() => document.getElementById("my_modal_5").showModal()}
-              className="btn flex items-center gap-2 rounded-full bg-green px-6 text-white"
+              className="btn flex items-center gap-2 rounded-full bg-myGreen px-6 text-white"
             >
               <FaRegUser /> Login
             </button>

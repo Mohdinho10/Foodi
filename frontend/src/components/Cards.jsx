@@ -81,30 +81,30 @@ const Cards = ({ item }) => {
         // className={`heartStar rating absolute right-2 top-2 gap-1 bg-green p-4 ${
         //   isHeartFilled ? "text-rose-500" : "text-white"
         // }`}
-        className={`btn btn-circle absolute right-2 top-2 bg-myGreen transition-colors duration-300 ${
+        className={`btn btn-circle absolute right-2 top-2 z-50 bg-myGreen transition-colors duration-300 ${
           isHeartFilled ? "text-rose-500" : "text-white"
         }`}
         onClick={handleHeartClick}
       >
         <FaHeart className="h-5 w-5 cursor-pointer" />
       </div>
-      <Link to={`/menu/${item._id}`}>
-        <figure>
-          <img
-            src={image}
-            alt={name}
-            className="transition-all duration-300 hover:scale-105 md:h-72"
-          />
-        </figure>
-      </Link>
+      {/* <Link to={`/menu/${item._id}`}> */}
+      <figure>
+        <img
+          src={image}
+          alt={name}
+          className="transition-all duration-300 hover:scale-105 md:h-60"
+        />
+      </figure>
+      {/* </Link> */}
       <div className="card-body">
-        <Link to={`/menu/${item._id}`}>
-          <h2 className="card-title">{name}</h2>
-        </Link>
+        {/* <Link to={`/menu/${item._id}`}> */}
+        <h2 className="card-title">{name}</h2>
+        {/* </Link> */}
         <p>Description of the item</p>
         <div className="card-actions mt-2 items-center justify-between">
           <h5 className="font-semibold">
-            <span className="text-red text-sm">$</span> {price}
+            <span className="text-sm text-red-400">$</span> {price}
           </h5>
           <button
             onClick={handleAddToCart}

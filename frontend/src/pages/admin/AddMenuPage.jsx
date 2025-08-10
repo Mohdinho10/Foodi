@@ -136,7 +136,7 @@ const AddMenu = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="hover:bg-green-dark btn flex items-center gap-2 bg-green text-white"
+            className="hover:bg-green-dark btn flex items-center gap-2 bg-myGreen text-white focus:outline-none"
           >
             Add Item <FaUtensils />
           </button>

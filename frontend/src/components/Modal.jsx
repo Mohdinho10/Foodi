@@ -112,7 +112,7 @@ const Modal = () => {
                 {...register("name", { required: !isLogin })}
               />
               {errors.name && (
-                <p className="text-sm text-red">Name is required</p>
+                <p className="text-red text-sm">Name is required</p>
               )}
             </div>
           )}
@@ -129,7 +129,7 @@ const Modal = () => {
               {...register("email", { required: true })}
             />
             {errors.email && (
-              <p className="text-sm text-red">Email is required</p>
+              <p className="text-sm text-red-600">Email is required</p>
             )}
           </div>
 
@@ -152,16 +152,18 @@ const Modal = () => {
               </label>
             )}
             {errors.password && (
-              <p className="text-sm text-red">Password is required</p>
+              <p className="text-sm text-red-600">Password is required</p>
             )}
-            {errorMessage && <p className="text-sm text-red">{errorMessage}</p>}
+            {errorMessage && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            )}
           </div>
 
           {/* Submit Button */}
           <div className="form-control">
             <button
               type="submit"
-              className="hover:bg-green-600 btn bg-green text-white"
+              className="btn bg-myGreen text-white hover:bg-green-600"
             >
               {isLogin ? "Login" : "Sign Up"}
             </button>
@@ -177,7 +179,7 @@ const Modal = () => {
                 setErrorMessage("");
                 reset();
               }}
-              className="ml-1 text-red underline"
+              className="ml-1 text-red-600 underline"
             >
               {isLogin ? "Signup Now" : "Login Here"}
             </button>
@@ -191,7 +193,7 @@ const Modal = () => {
         <div className="flex justify-center gap-4">
           <button
             onClick={handleGoogleAuth}
-            className="btn btn-circle bg-red text-white hover:bg-red"
+            className="btn btn-circle bg-red-600 text-white hover:bg-red-700"
             title="Google"
           >
             <FaGoogle />
