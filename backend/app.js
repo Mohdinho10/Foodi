@@ -8,42 +8,46 @@ import jwt from "jsonwebtoken";
 import Stripe from "stripe";
 import bodyParser from "body-parser";
 import path from "path";
+import { fileURLToPath } from "url"; // ✅ Needed for __dirname in ES modules
+
 import userRoutes from "./routes/userRoutes.js";
 import menuRoutes from "./routes/menuRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
-import { Router } from "express";
 import { notFound, errorHandler } from "./middleware/ErrorMiddleware.js";
 
 dotenv.config();
 
 const app = express();
-const router = Router();
+
+// ✅ Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
+// ✅ Allow frontend in dev
 app.use(
   cors({
-    origin: "http://localhost:5173", // Replace with your frontend URL
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
   })
 );
 
-// middleware
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
-// cookie parser middleware
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
+// JWT route
 app.post("/jwt", async (req, res) => {
   const { email } = req.body;
-
   const token = jwt.sign({ email }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
@@ -51,56 +55,57 @@ app.post("/jwt", async (req, res) => {
   res
     .cookie("jwt", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // HTTPS only in prod
-      sameSite: "Strict", // Protects against CSRF
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     })
     .send({ success: true });
 });
 
+// API routes
 app.use("/api/menu", menuRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 
+// Stripe route
 app.post("/create-payment-intent", async (req, res) => {
   const { totalPrice } = req.body;
-  const amount = totalPrice * 100; // Convert to cents
+  const amount = totalPrice * 100; // cents
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount, // amount in cents
+      amount,
       currency: "usd",
       payment_method_types: ["card"],
     });
 
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
+    res.send({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
     console.error("Stripe error:", error);
     res.status(500).send({ error: "Failed to create payment intent" });
   }
 });
 
-// Serve static files
+// ✅ Serve frontend in production
 if (process.env.NODE_ENV === "production") {
-  const __dirname = path.resolve();
-  app.use(express.static(path.join(__dirname, "/frontend/dist")));
+  app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
-  app.get("/*", (req, res) =>
-    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"))
-  );
+  app.get("/*", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
+  });
 }
 
+// Error handlers
 app.use(notFound);
 app.use(errorHandler);
 
+// DB connect
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("mongoose connected successfully"))
-  .catch((err) => err);
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((err) => console.error(err));
 
 app.listen(port, () => {
-  console.log(`server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
