@@ -7,6 +7,7 @@ import morgan from "morgan";
 import jwt from "jsonwebtoken";
 import Stripe from "stripe";
 import bodyParser from "body-parser";
+import path from "path";
 import userRoutes from "./routes/userRoutes.js";
 import menuRoutes from "./routes/menuRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
