@@ -33,6 +33,7 @@ app.use(
 // middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 // cookie parser middleware
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -80,6 +81,16 @@ app.post("/create-payment-intent", async (req, res) => {
     res.status(500).send({ error: "Failed to create payment intent" });
   }
 });
+
+// Serve static files
+if (process.env.NODE_ENV === "production") {
+  const __dirname = path.resolve();
+  app.use(express.static(path.join(__dirname, "/frontend/dist")));
+
+  app.get("*", (req, res) =>
+    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"))
+  );
+}
 
 app.use(notFound);
 app.use(errorHandler);
