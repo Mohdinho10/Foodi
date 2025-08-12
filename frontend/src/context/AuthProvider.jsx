@@ -12,7 +12,7 @@ const auth = getAuth(app);
 const BASE_URL =
   import.meta.env.MODE === "development"
     ? "http://localhost:3000"
-    : import.meta.env.VITE_API_URL;
+    : "https://foodi-6kyv.onrender.com";
 
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
