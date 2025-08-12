@@ -27,15 +27,22 @@ const __dirname = path.dirname(__filename);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
-// Allow frontend in dev only
-if (process.env.NODE_ENV !== "production") {
-  app.use(
-    cors({
-      origin: "https://foodi-6kyv.onrender.com/" || "http://localhost:5173",
-      credentials: true,
-    })
-  );
-}
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://foodi-6kyv.onrender.com",
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 // Middlewares
 app.use(express.json());
