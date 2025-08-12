@@ -8,12 +8,6 @@ import axios from "axios";
 
 const auth = getAuth(app);
 
-// ✅ Detect API base URL from env
-const BASE_URL =
-  import.meta.env.MODE === "development"
-    ? "http://localhost:3000"
-    : "https://foodi-6kyv.onrender.com";
-
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
 
@@ -27,11 +21,11 @@ const AuthProvider = ({ children }) => {
         };
 
         try {
-          // ✅ Call the right backend depending on env
+          // ✅ This will store the token in a cookie
           await axios.post(
-            `${BASE_URL}/jwt`,
+            "http://localhost:3000/jwt",
             { email: currentUser.email },
-            { withCredentials: true },
+            { withCredentials: true }, // ✅ Important!
           );
 
           dispatch(setCredentials(userInfo));
@@ -40,6 +34,7 @@ const AuthProvider = ({ children }) => {
         }
       } else {
         dispatch(logout());
+        // No need to remove token from localStorage anymore
       }
     });
 
