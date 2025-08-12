@@ -95,7 +95,8 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendPath));
 
   // Catch-all for SPA (all non-API routes)
-  app.get("*", (req, res) => {
+  // ✅ Catch-all for SPA routes using RegExp (Express 5 safe)
+  app.get(/.*/, (req, res) => {
     res.sendFile(path.resolve(frontendPath, "index.html"));
   });
 }
