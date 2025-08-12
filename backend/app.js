@@ -52,23 +52,22 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-// JWT route
+// ✅ JWT route - sets cookie correctly for dev & prod
 app.post("/jwt", async (req, res) => {
   const { email } = req.body;
   const token = jwt.sign({ email }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 
-  res
-    .cookie("jwt", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
-    .send({ success: true });
-});
+  res.cookie("jwt", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // HTTPS in prod
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // None for cross-site
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 
+  res.send({ success: true });
+});
 // API routes
 app.use("/api/menu", menuRoutes);
 app.use("/api/users", userRoutes);
