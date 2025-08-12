@@ -89,13 +89,10 @@ app.post("/create-payment-intent", async (req, res) => {
 
 // ✅ Serve frontend in production
 if (process.env.NODE_ENV === "production") {
-  const frontendPath = path.join(__dirname, "frontend", "dist");
+  const frontendPath = path.join(__dirname, "..", "frontend", "dist");
 
-  // Serve static files
   app.use(express.static(frontendPath));
 
-  // Catch-all for SPA (all non-API routes)
-  // ✅ Catch-all for SPA routes using RegExp (Express 5 safe)
   app.get(/.*/, (req, res) => {
     res.sendFile(path.resolve(frontendPath, "index.html"));
   });
