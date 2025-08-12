@@ -10,8 +10,9 @@ const auth = getAuth(app);
 
 // ✅ Detect API base URL from env
 const BASE_URL =
-  "http://localhost:3000" || // Backend dev port
-  "https://foodi-6kyv.onrender.com"; // Backend prod URL
+  import.meta.env.MODE === "development"
+    ? "http://localhost:3000"
+    : import.meta.env.VITE_API_URL;
 
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
