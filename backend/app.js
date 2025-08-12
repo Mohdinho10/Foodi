@@ -56,7 +56,7 @@ app.use(morgan("dev"));
 app.post("/jwt", async (req, res) => {
   const { email } = req.body;
   const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
+    expiresIn: "30d",
   });
 
   res
