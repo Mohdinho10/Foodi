@@ -12,7 +12,7 @@ const auth = getAuth(app);
 const BASE_URL =
   import.meta.env.MODE === "development"
     ? "http://localhost:3000"
-    : "https://foodi-6kyv.onrender.com";
+    : "https://foodi-zkdc.onrender.com";
 
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
