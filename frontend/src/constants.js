@@ -1,6 +1,6 @@
 export const BASE_URL =
   // eslint-disable-next-line no-undef
-  import.meta.env.MODE === "development"
+  import.meta.env.NODE_ENV === "development"
     ? "http://localhost:3000"
     : "https://foodi-6kyv.onrender.com";
 

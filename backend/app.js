@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 
 const allowedOrigins = [
   "http://localhost:5173",
