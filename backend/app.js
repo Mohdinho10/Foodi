@@ -29,7 +29,7 @@ const port = process.env.PORT || 3000;
 
 const allowedOrigins = [
   "http://localhost:5173",
-  // "https://foodi-6kyv.onrender.com",
+  "https://foodi-zkdc.onrender.com",
 ];
 
 const corsOptions = {
