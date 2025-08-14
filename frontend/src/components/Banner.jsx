@@ -111,7 +111,7 @@ const Banner = () => {
           </p>
           <Link
             to={"/menu"}
-            className="btn rounded-full bg-green px-8 py-3 font-semibold text-white"
+            className="btn rounded-full bg-myGreen px-8 py-3 font-semibold text-white"
           >
             Order Now
           </Link>
