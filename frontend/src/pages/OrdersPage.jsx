@@ -12,16 +12,14 @@ function OrdersPage() {
     data: orders = [],
     isLoading,
     isError,
-  } = useGetMyOrdersQuery(user?.email, {
-    skip: !user?.email,
-  });
+  } = useGetMyOrdersQuery(user?.email, { skip: !user?.email });
 
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  if (isLoading) return <p className="py-20 text-center">Loading orders...</p>;
+  if (isLoading) return <p className="py-12 text-center">Loading orders...</p>;
   if (isError)
     return (
-      <p className="py-20 text-center text-red-500">Failed to load orders.</p>
+      <p className="py-12 text-center text-red-500">Failed to load orders.</p>
     );
 
   const openModal = (order) => setSelectedOrder(order);
@@ -30,11 +28,12 @@ function OrdersPage() {
   return (
     <div className="container mx-auto max-w-screen-2xl px-4 py-28 xl:px-24">
       <div className="rounded-xl bg-gradient-to-r from-[#FAFAFA] to-[#FCFCFC] p-8 shadow-md">
-        <h2 className="mb-10 text-center text-4xl font-bold">
+        <h2 className="mb-8 text-center text-3xl font-bold md:text-4xl">
           Track <span className="text-myGreen">Orders</span>
         </h2>
 
-        <div className="overflow-x-auto">
+        {/* Table layout for md+ screens */}
+        <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full overflow-hidden rounded-lg bg-white shadow-md">
             <thead className="bg-gray-100">
               <tr>
@@ -57,7 +56,7 @@ function OrdersPage() {
                     {order._id.slice(-6)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {order.cartItems && order.cartItems.length > 0
+                    {order.cartItems?.length
                       ? order.cartItems.map((item) => item.name).join(", ")
                       : "No items"}
                   </td>
@@ -115,6 +114,72 @@ function OrdersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile card layout for small screens */}
+        <div className="flex flex-col gap-4 md:hidden">
+          {orders.length > 0 ? (
+            orders.map((order) => (
+              <div
+                key={order._id}
+                className="flex flex-col rounded-lg border bg-white p-4 shadow-sm"
+              >
+                <div className="mb-2 flex items-start justify-between">
+                  <span className="font-medium">ID: {order._id.slice(-6)}</span>
+                  <button
+                    onClick={() => openModal(order)}
+                    className="text-sm text-blue-500 hover:underline"
+                  >
+                    View
+                  </button>
+                </div>
+                <p className="text-sm text-gray-700">
+                  <strong>Items:</strong>{" "}
+                  {order.cartItems?.length
+                    ? order.cartItems.map((item) => item.name).join(", ")
+                    : "No items"}
+                </p>
+                <p className="text-sm">
+                  <strong>Type:</strong>{" "}
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+                      order.orderType === "delivery"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-purple-100 text-purple-700"
+                    }`}
+                  >
+                    {order.orderType}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Payment:</strong> {order.paymentMethod}
+                </p>
+                <p className="text-sm">
+                  <strong>Status:</strong>{" "}
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                      order.status === "delivered" ||
+                      order.status === "completed"
+                        ? "bg-green-100 text-green-700"
+                        : order.status === "cancelled"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {order.status}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-500">
+                  <strong>Date:</strong>{" "}
+                  {moment(order.createdAt).format("MMM D, YYYY")}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="py-6 text-center italic text-gray-500">
+              You have no orders yet.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Modal for order details */}
@@ -135,7 +200,7 @@ function OrdersPage() {
             </p>
             <p className="text-gray-700">
               <strong>Items:</strong>{" "}
-              {selectedOrder.cartItems && selectedOrder.cartItems.length > 0
+              {selectedOrder.cartItems?.length
                 ? selectedOrder.cartItems
                     .map(
                       (item) =>
